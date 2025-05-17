@@ -12,3 +12,4 @@ class User(Base, Model):
     last_name = Column(String(255), index=True)
     email = Column(String(255), index=True)
     hashed_password = Column(String(255))
+    role = Column(String(50), default="user", index=True)  # Added for RBAC

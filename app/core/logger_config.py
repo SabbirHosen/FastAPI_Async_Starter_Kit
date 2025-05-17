@@ -279,7 +279,7 @@ def get_logger(base_log_dir: str = settings.LOG_DIR) -> logging.Logger:
         #     )
         # )
         file_handler = TimedRotatingFileHandler(
-            os.path.join(log_dir, f'app_{os.getpid()}.log'), when="midnight", interval=1, backupCount=7
+            os.path.join(log_dir, f'app_{datetime.now().strftime("%Y_%m_%d")}.log'), when="midnight", interval=1, backupCount=7
         )
         file_handler.setFormatter(logging.Formatter(
             '%(asctime)s - %(levelname)s - %(processName)s - %(threadName)s - %(funcName)s - %(message)s'

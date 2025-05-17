@@ -5,11 +5,18 @@ from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.responses import PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.core.custom_exception import CustomException
 from app.core.config import settings
 from app.api.v1 import auth
+from fastapi.responses import FileResponse
+import os
 
-app = FastAPI(title="Smart Valuation")
+limiter = Limiter(key_func=get_remote_address)
+
+app = FastAPI(title="Smart Valuation", description="Async FastAPI Starter Kit with JWT, Alembic, SQLAlchemy, Email, Logging, Rate Limiting, and more.")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,8 +26,18 @@ app.add_middleware(
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )
 
-app.include_router(auth.router, prefix="/v1/auth", tags=["auth"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+@app.get("/", response_class=FileResponse, include_in_schema=False)
+async def read_root():
+    return FileResponse(os.path.join("app/api/templates", "index.html"))
+
+@app.get("/health", tags=["Health"], summary="Health Check", description="Returns API health status.")
+async def health_check():
+    return {"status": "healthy"}
+
+app.include_router(auth.router, prefix="/v1/auth", tags=["auth"])
 
 @app.exception_handler(CustomException)
 async def custom_exception_handler(request, exc: CustomException):
